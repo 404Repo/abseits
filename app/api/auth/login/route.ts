@@ -12,10 +12,10 @@ export async function POST(request: Request) {
   const result = authenticateEditor(email, password);
 
   if (!result) {
-    return NextResponse.redirect(new URL("/redaktion/login?error=credentials", request.url), 303);
+    return redirectTo("/redaktion/login?error=credentials");
   }
 
-  const response = NextResponse.redirect(new URL("/redaktion", request.url), 303);
+  const response = redirectTo("/redaktion");
   response.cookies.set(SESSION_COOKIE, result.token, {
     httpOnly: true,
     sameSite: "lax",
@@ -24,4 +24,8 @@ export async function POST(request: Request) {
     maxAge: SESSION_DURATION_SECONDS,
   });
   return response;
+}
+
+function redirectTo(location: string): NextResponse {
+  return new NextResponse(null, { status: 303, headers: { location } });
 }
