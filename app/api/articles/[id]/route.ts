@@ -11,7 +11,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     if (!existing) return Response.json({ error: "Artikel nicht gefunden." }, { status: 404 });
     const input = normalizeArticleInput(await request.json() as ArticleInput);
     const now = new Date().toISOString();
-    const publishedAt = input.status === "published" ? existing.publishedAt ?? now : null;
+    const publishedAt = input.status === "published" ? existing.publishedAt ?? now : existing.publishedAt;
     const updated = updateArticle(id, { ...input, publishedAt, updatedAt: now });
     if (!updated) return Response.json({ error: "Artikel nicht gefunden." }, { status: 404 });
     return Response.json({ article: serializeArticle(updated) });

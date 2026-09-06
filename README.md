@@ -89,6 +89,11 @@ eine Warnung. Jeder gespeicherte Beitrag kann in einer nur für die Redaktion
 erreichbaren Vorschau kontrolliert werden. Der Publikationscheck zeigt fehlende
 Pflichtangaben und redaktionelle Empfehlungen vor der Veröffentlichung.
 
+Die Artikelliste bietet eine Volltextsuche über Titel, Ressort, Kategorie und
+Schlagwörter sowie Filter für Entwürfe, veröffentlichte und archivierte
+Beiträge. Artikel können als neuer Entwurf dupliziert, sicher archiviert und
+später wiederhergestellt werden. Archivieren löscht keine Inhalte.
+
 ## Git-Workflow
 
 Der stabile Entwicklungszweig ist `main`. Änderungen werden künftig in einem

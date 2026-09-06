@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { CheckCircle2, Circle, ExternalLink, Eye, FilePlus2, FileUp, ImagePlus, LayoutDashboard, Save, Settings2 } from "lucide-react";
+import { Archive, ArchiveRestore, CheckCircle2, Circle, CopyPlus, ExternalLink, Eye, FilePlus2, FileUp, ImagePlus, LayoutDashboard, Save, Search, Settings2 } from "lucide-react";
 import { RichTextEditor } from "@/components/rich-text-editor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +22,7 @@ export type EditableArticle = {
   tags: string;
   coverImage: string;
   imageAlt: string;
-  status: "draft" | "published";
+  status: "draft" | "published" | "archived";
   updatedAt: string;
 };
 type FormState = Omit<EditableArticle, "id" | "updatedAt"> & { id: number | null };
@@ -41,8 +41,11 @@ export function EditorApp({ initialArticles, editorEmail, signOutPath }: { initi
   const [form, setForm] = useState<FormState>(emptyForm);
   const [saving, setSaving] = useState(false);
   const [autosaving, setAutosaving] = useState(false);
+  const [managing, setManaging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | FormState["status"]>("all");
   const [dirty, setDirty] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
   const [message, setMessage] = useState("");
@@ -50,6 +53,14 @@ export function EditorApp({ initialArticles, editorEmail, signOutPath }: { initi
   const documentInput = useRef<HTMLInputElement>(null);
   const coverInput = useRef<HTMLInputElement>(null);
   const editing = useMemo(() => form.id !== null, [form.id]);
+  const filteredArticles = useMemo(() => {
+    const needle = query.trim().toLocaleLowerCase("de");
+    return articles.filter((article) => {
+      if (statusFilter !== "all" && article.status !== statusFilter) return false;
+      if (!needle) return true;
+      return [article.title, article.kicker, article.category, article.tags].some((value) => value.toLocaleLowerCase("de").includes(needle));
+    });
+  }, [articles, query, statusFilter]);
   const checklist = useMemo(() => [
     { label: "Titel", ok: form.title.trim().length >= 5, required: true },
     { label: "Startseiten-Teaser", ok: form.excerpt.trim().length >= 30, required: true },
@@ -110,7 +121,7 @@ export function EditorApp({ initialArticles, editorEmail, signOutPath }: { initi
         setForm(next);
         setDirty(false);
         setLastSavedAt(saved.updatedAt);
-        setMessage(automatic ? "Entwurf automatisch gespeichert." : saved.status === "published" ? "Artikel gespeichert und veröffentlicht." : "Entwurf gespeichert.");
+        setMessage(automatic ? "Entwurf automatisch gespeichert." : saved.status === "published" ? "Artikel gespeichert und veröffentlicht." : saved.status === "archived" ? "Artikel archiviert." : "Entwurf gespeichert.");
       }
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Der Artikel konnte nicht gespeichert werden.");
@@ -185,6 +196,42 @@ export function EditorApp({ initialArticles, editorEmail, signOutPath }: { initi
     await persist(form, false);
   }
 
+  async function duplicateCurrent() {
+    if (form.id === null) return;
+    if (dirty) {
+      setMessage("Bitte die Änderungen vor dem Duplizieren zuerst speichern.");
+      return;
+    }
+    setManaging(true);
+    setMessage("");
+    try {
+      const response = await fetch(`/api/articles/${form.id}/duplicate`, { method: "POST" });
+      const payload = await response.json() as { article?: EditableArticle; error?: string };
+      if (!response.ok || !payload.article) throw new Error(payload.error ?? "Der Artikel konnte nicht dupliziert werden.");
+      const duplicated = payload.article;
+      setArticles((current) => [duplicated, ...current]);
+      formVersion.current += 1;
+      setForm(toForm(duplicated));
+      setDirty(false);
+      setLastSavedAt(duplicated.updatedAt);
+      setMessage("Kopie als neuer Entwurf angelegt.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Der Artikel konnte nicht dupliziert werden.");
+    } finally {
+      setManaging(false);
+    }
+  }
+
+  async function toggleArchive() {
+    if (form.id === null) return;
+    if (dirty) {
+      setMessage("Bitte die Änderungen vor dieser Aktion zuerst speichern.");
+      return;
+    }
+    const nextStatus: FormState["status"] = form.status === "archived" ? "draft" : "archived";
+    await persist({ ...form, status: nextStatus }, false);
+  }
+
   return (
     <section className="editor-workspace">
       <header className="page-shell editor-heading">
@@ -199,7 +246,11 @@ export function EditorApp({ initialArticles, editorEmail, signOutPath }: { initi
       <div className="page-shell editor-layout">
         <aside className="editor-library">
           <div className="editor-library-head"><div><h2>Artikel</h2><p>{articles.length} Beiträge</p></div><span>{articles.filter((article) => article.status === "published").length} live</span></div>
-          <div className="editor-list">{articles.map((article) => <button key={article.id} type="button" onClick={() => selectArticle(article)} className={form.id === article.id ? "active" : ""}><span className={`status-pill ${article.status}`}>{article.status === "published" ? "Veröffentlicht" : "Entwurf"}</span><strong>{article.title}</strong><small>{formatEditorDate(article.updatedAt)}</small></button>)}{articles.length === 0 && <p className="editor-empty">Noch keine eigenen Artikel. Importiere ein Word-Dokument oder starte ein neues Dossier.</p>}</div>
+          <div className="editor-library-tools">
+            <label><Search /><Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Artikel suchen" aria-label="Artikel suchen" /></label>
+            <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as typeof statusFilter)}><SelectTrigger aria-label="Artikel nach Status filtern"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Alle Status</SelectItem><SelectItem value="draft">Entwürfe</SelectItem><SelectItem value="published">Veröffentlicht</SelectItem><SelectItem value="archived">Archiviert</SelectItem></SelectContent></Select>
+          </div>
+          <div className="editor-list">{filteredArticles.map((article) => <button key={article.id} type="button" onClick={() => selectArticle(article)} className={form.id === article.id ? "active" : ""}><span className={`status-pill ${article.status}`}>{statusLabel(article.status)}</span><strong>{article.title}</strong><small>{formatEditorDate(article.updatedAt)}</small></button>)}{articles.length === 0 ? <p className="editor-empty">Noch keine eigenen Artikel. Importiere ein Word-Dokument oder starte ein neues Dossier.</p> : filteredArticles.length === 0 && <p className="editor-empty">Keine Artikel für diese Suche gefunden.</p>}</div>
           <section className="publication-checklist" aria-labelledby="publication-checklist-title">
             <div><h3 id="publication-checklist-title">Publikationscheck</h3><span>{checklist.filter((item) => item.required && item.ok).length}/{checklist.filter((item) => item.required).length} Pflicht</span></div>
             <ul>{checklist.map((item) => <li key={item.label} className={item.ok ? "complete" : ""}>{item.ok ? <CheckCircle2 /> : <Circle />}<span>{item.label}{!item.required && <small> empfohlen</small>}</span></li>)}</ul>
@@ -209,7 +260,7 @@ export function EditorApp({ initialArticles, editorEmail, signOutPath }: { initi
         <form onSubmit={save} className="document-editor">
           <div className="document-editor-topbar">
             <span>{editing ? "Artikel bearbeiten" : "Neuer Artikel"}<small className={dirty ? "unsaved" : ""}>{dirty ? "Ungespeichert" : lastSavedAt ? `Gesichert ${formatEditorTime(lastSavedAt)}` : "Noch nicht gespeichert"}</small></span>
-            <div>{editing && <a href={`/redaktion/vorschau/${form.id}`} target="_blank" rel="noreferrer"><Eye /> Vorschau</a>}{editing && form.status === "published" && <a href={`/artikel/${form.slug}`} target="_blank" rel="noreferrer">Live <ExternalLink /></a>}</div>
+            <div>{editing && <button type="button" onClick={() => void duplicateCurrent()} disabled={managing || saving}><CopyPlus /> Duplizieren</button>}{editing && <button type="button" onClick={() => void toggleArchive()} disabled={managing || saving}>{form.status === "archived" ? <ArchiveRestore /> : <Archive />} {form.status === "archived" ? "Wiederherstellen" : "Archivieren"}</button>}{editing && <a href={`/redaktion/vorschau/${form.id}`} target="_blank" rel="noreferrer"><Eye /> Vorschau</a>}{editing && form.status === "published" && <a href={`/artikel/${form.slug}`} target="_blank" rel="noreferrer">Live <ExternalLink /></a>}</div>
           </div>
           <div className="document-page">
             <input className="document-kicker" value={form.kicker} onChange={(event) => update("kicker", event.target.value)} placeholder="RESSORT ODER THEMA" aria-label="Ressort oder Thema" />
@@ -218,7 +269,7 @@ export function EditorApp({ initialArticles, editorEmail, signOutPath }: { initi
 
             <div className="document-metadata">
               <label><span>Kategorie</span><Select value={form.category} onValueChange={(value) => update("category", value)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{categories.map((category) => <SelectItem key={category} value={category}>{category}</SelectItem>)}</SelectContent></Select></label>
-              <label><span>Status</span><Select value={form.status} onValueChange={(value) => update("status", value as FormState["status"])}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="draft">Entwurf</SelectItem><SelectItem value="published">Veröffentlicht</SelectItem></SelectContent></Select></label>
+              <label><span>Status</span><Select value={form.status} onValueChange={(value) => update("status", value as FormState["status"])}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="draft">Entwurf</SelectItem><SelectItem value="published">Veröffentlicht</SelectItem><SelectItem value="archived">Archiviert</SelectItem></SelectContent></Select></label>
               <label className="wide"><span>Schlagwörter</span><Input value={form.tags} onChange={(event) => update("tags", event.target.value)} placeholder="Quantenphysik, Philosophie, Gedankenexperiment" /></label>
             </div>
 
@@ -242,7 +293,7 @@ export function EditorApp({ initialArticles, editorEmail, signOutPath }: { initi
             </details>
           </div>
 
-          <footer className="document-savebar"><p className={isErrorMessage(message) ? "error" : ""} role="status">{message || (autosaving ? "Entwurf wird automatisch gespeichert …" : dirty && editing && form.status === "draft" ? "Automatische Sicherung steht aus …" : dirty ? "Ungespeicherte Änderungen." : "Alle Änderungen sind gesichert.")}</p><Button type="submit" disabled={saving || autosaving || uploading || importing}><Save />{saving ? "Wird gespeichert …" : editing ? "Änderungen speichern" : "Dossier speichern"}</Button></footer>
+          <footer className="document-savebar"><p className={isErrorMessage(message) ? "error" : ""} role="status">{message || (autosaving ? "Entwurf wird automatisch gespeichert …" : dirty && editing && form.status === "draft" ? "Automatische Sicherung steht aus …" : dirty ? "Ungespeicherte Änderungen." : "Alle Änderungen sind gesichert.")}</p><Button type="submit" disabled={saving || autosaving || managing || uploading || importing}><Save />{saving ? "Wird gespeichert …" : editing ? "Änderungen speichern" : "Dossier speichern"}</Button></footer>
         </form>
       </div>
     </section>
@@ -255,6 +306,12 @@ function formatEditorDate(value: string): string {
 
 function formatEditorTime(value: string): string {
   return new Intl.DateTimeFormat("de-DE", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Berlin" }).format(new Date(value));
+}
+
+function statusLabel(status: EditableArticle["status"]): string {
+  if (status === "published") return "Veröffentlicht";
+  if (status === "archived") return "Archiviert";
+  return "Entwurf";
 }
 
 function isErrorMessage(message: string): boolean {

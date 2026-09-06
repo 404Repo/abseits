@@ -9,7 +9,7 @@ export function LongformArticle({ article, preview = false }: { article: PublicA
   return (
     <main className="min-h-screen article-site">
       <SiteHeader />
-      {preview && <div className="preview-banner"><strong>Entwurfsvorschau</strong><span>Diese Ansicht ist nur in der angemeldeten Redaktion erreichbar.</span><Link href="/redaktion">Zurück zum Editor</Link></div>}
+      {preview && <div className="preview-banner"><strong>Redaktionsvorschau</strong><span>Diese Ansicht ist nur in der angemeldeten Redaktion erreichbar.</span><Link href="/redaktion">Zurück zum Editor</Link></div>}
       <article className="longform-article">
         <div className="longform-utility"><Link href={preview ? "/redaktion" : "/"}><ArrowLeft />{preview ? "Zur Redaktion" : "Zum Archiv"}</Link><span>{article.category}</span></div>
         <header className="longform-header">

@@ -119,6 +119,37 @@ export function findArticleById(id: number): ArticleRow | undefined {
   return getDb().prepare(`SELECT ${articleColumns} FROM articles WHERE id = ? LIMIT 1`).get(id) as ArticleRow | undefined;
 }
 
+export function duplicateArticle(id: number): ArticleRow | undefined {
+  const source = findArticleById(id);
+  if (!source) return undefined;
+
+  const database = getDb();
+  const slugBase = `${source.slug}-kopie`;
+  let slug = slugBase;
+  let suffix = 2;
+  while (database.prepare("SELECT id FROM articles WHERE slug = ? LIMIT 1").get(slug)) {
+    slug = `${slugBase}-${suffix}`;
+    suffix += 1;
+  }
+
+  return createArticle({
+    slug,
+    title: `${source.title} (Kopie)`,
+    kicker: source.kicker,
+    subtitle: source.subtitle,
+    excerpt: source.excerpt,
+    summary: source.summary,
+    content: source.content,
+    category: source.category,
+    tags: source.tags,
+    coverImage: source.coverImage,
+    imageAlt: source.imageAlt,
+    status: "draft",
+    publishedAt: null,
+    updatedAt: new Date().toISOString(),
+  });
+}
+
 type ArticleWrite = Omit<ArticleRow, "id" | "createdAt">;
 
 export function createArticle(input: ArticleWrite): ArticleRow {
