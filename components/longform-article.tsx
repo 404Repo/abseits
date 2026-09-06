@@ -18,7 +18,7 @@ export function LongformArticle({ article, preview = false }: { article: PublicA
           <p className="longform-subtitle">{article.subtitle || article.excerpt}</p>
           <div className="longform-meta"><span>{formatDate(article.publishedAt)}</span><span><Clock3 />{article.readingMinutes} Minuten Lesezeit</span></div>
         </header>
-        {article.coverImage && <figure className="longform-cover"><img src={article.coverImage} alt={article.imageAlt || ""} />{article.imageAlt && <figcaption>{article.imageAlt}</figcaption>}</figure>}
+        {article.coverImage && <figure className="longform-cover"><div className="longform-cover-media"><img src={article.coverImage} alt={article.imageAlt || ""} /></div>{article.imageAlt && <figcaption>{article.imageAlt}</figcaption>}</figure>}
         {article.summary && <aside className="longform-summary"><strong>Kurz gesagt:</strong> {article.summary}</aside>}
         <div className="longform-body" dangerouslySetInnerHTML={{ __html: body }} />
         <footer className="longform-footer">

@@ -39,3 +39,8 @@
 .editor-library-tools{display:grid;gap:.55rem;border-bottom:1px solid #d4d1ca;padding:.8rem}.editor-library-tools label{position:relative}.editor-library-tools label>svg{position:absolute;z-index:1;left:.65rem;top:50%;width:.9rem;height:.9rem;color:#737d85;transform:translateY(-50%)}.editor-library-tools [data-slot=input]{height:2.35rem;border-radius:0;background:#fff;padding-left:2rem}.editor-library-tools [data-slot=select-trigger]{width:100%;height:2.35rem;border-radius:0;background:#fff}.status-pill.archived{color:#8a6554}.document-editor-topbar>div{flex-wrap:wrap;justify-content:flex-end}.document-editor-topbar button{display:flex;align-items:center;gap:.35rem;border:0;background:transparent;color:#fff;padding:0;font-size:inherit;font-weight:inherit;letter-spacing:inherit;text-transform:inherit;cursor:pointer}.document-editor-topbar button:hover,.document-editor-topbar a:hover{color:#f3bd83}.document-editor-topbar button:disabled{cursor:not-allowed;opacity:.45}
 
 @media(max-width:719px){.document-editor-topbar>div{justify-content:flex-start}}
+
+/* Centered cover artwork */
+.longform-cover-media{display:flex;width:100%;min-height:18rem;align-items:center;justify-content:center;overflow:hidden;background:#eff4f6;padding:clamp(.35rem,1vw,.75rem)}.longform-cover-media img{display:block;width:auto;max-width:100%;height:auto;max-height:min(72vh,48rem);object-fit:contain;object-position:center;background:transparent}.cover-editor>img{width:auto;max-width:100%;margin-inline:auto;object-position:center}.lead-story img{object-position:center}
+
+@media(max-width:719px){.longform-cover-media{min-height:10rem;padding:.25rem}.longform-cover-media img{max-height:65vh}}
