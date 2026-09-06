@@ -14,7 +14,7 @@ export async function POST(request: Request) {
       String(form.get("password") || ""),
       String(form.get("setupToken") || ""),
     );
-    const response = NextResponse.redirect(new URL("/redaktion", request.url), 303);
+    const response = redirectTo("/redaktion");
     response.cookies.set(SESSION_COOKIE, result.token, {
       httpOnly: true,
       sameSite: "lax",
@@ -27,6 +27,10 @@ export async function POST(request: Request) {
     const reason = error instanceof Error ? error.message : "unknown";
     const knownReasons = ["already-configured", "setup-token", "email", "password"];
     const code = knownReasons.includes(reason) ? reason : "unknown";
-    return NextResponse.redirect(new URL(`/redaktion/setup?error=${code}`, request.url), 303);
+    return redirectTo(`/redaktion/setup?error=${code}`);
   }
+}
+
+function redirectTo(location: string): NextResponse {
+  return new NextResponse(null, { status: 303, headers: { location } });
 }
