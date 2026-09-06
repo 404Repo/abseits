@@ -1,4 +1,4 @@
-import { updateArticle } from "@/db";
+import { findArticleById, updateArticle } from "@/db";
 import { normalizeArticleInput, serializeArticle, type ArticleInput } from "@/lib/article-input";
 import { getAuthorizedEditor } from "@/lib/editor-auth";
 
@@ -7,9 +7,12 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     if (!(await getAuthorizedEditor())) return Response.json({ error: "Keine Berechtigung." }, { status: 403 });
     const id = Number((await params).id);
     if (!Number.isInteger(id) || id < 1) return Response.json({ error: "Ungültiger Artikel." }, { status: 400 });
+    const existing = findArticleById(id);
+    if (!existing) return Response.json({ error: "Artikel nicht gefunden." }, { status: 404 });
     const input = normalizeArticleInput(await request.json() as ArticleInput);
     const now = new Date().toISOString();
-    const updated = updateArticle(id, { ...input, publishedAt: input.status === "published" ? now : null, updatedAt: now });
+    const publishedAt = input.status === "published" ? existing.publishedAt ?? now : null;
+    const updated = updateArticle(id, { ...input, publishedAt, updatedAt: now });
     if (!updated) return Response.json({ error: "Artikel nicht gefunden." }, { status: 404 });
     return Response.json({ article: serializeArticle(updated) });
   } catch (error) {

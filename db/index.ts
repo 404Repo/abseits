@@ -115,6 +115,10 @@ export function findPublishedArticleBySlug(slug: string): ArticleRow | undefined
   return getDb().prepare(`SELECT ${articleColumns} FROM articles WHERE slug = ? AND status = 'published' LIMIT 1`).get(slug) as ArticleRow | undefined;
 }
 
+export function findArticleById(id: number): ArticleRow | undefined {
+  return getDb().prepare(`SELECT ${articleColumns} FROM articles WHERE id = ? LIMIT 1`).get(id) as ArticleRow | undefined;
+}
+
 type ArticleWrite = Omit<ArticleRow, "id" | "createdAt">;
 
 export function createArticle(input: ArticleWrite): ArticleRow {

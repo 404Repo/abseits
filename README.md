@@ -83,6 +83,12 @@ Bildunterschriften. Bestehende `.docx`-Artikel können direkt importiert werden;
 Überschriften, eingebettete Bilder, Bildunterschriften und Links werden dabei
 übernommen. Unterstützte Bildformate sind JPG, PNG, WebP und GIF bis 12 MB.
 
+Bereits angelegte Entwürfe werden während des Schreibens automatisch
+gesichert. Ungespeicherte Änderungen sind sichtbar und beim Verlassen erscheint
+eine Warnung. Jeder gespeicherte Beitrag kann in einer nur für die Redaktion
+erreichbaren Vorschau kontrolliert werden. Der Publikationscheck zeigt fehlende
+Pflichtangaben und redaktionelle Empfehlungen vor der Veröffentlichung.
+
 ## Git-Workflow
 
 Der stabile Entwicklungszweig ist `main`. Änderungen werden künftig in einem

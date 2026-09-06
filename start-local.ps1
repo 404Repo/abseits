@@ -23,15 +23,15 @@ if (-not (Test-Path ".env.local")) {
     ) | Set-Content -Path ".env.local" -Encoding utf8
 }
 
-Write-Host "[.ABSEITS 0.4.0] Abhängigkeiten werden geprüft ..."
+Write-Host "[.ABSEITS 0.5.0] Abhängigkeiten werden geprüft ..."
 npm install --no-audit --no-fund
 if ($LASTEXITCODE -ne 0) {
     throw "npm install ist mit Exitcode $LASTEXITCODE fehlgeschlagen."
 }
 
-Write-Host "[.ABSEITS 0.4.0] Startet unter http://localhost:$Port"
-Write-Host "[.ABSEITS 0.4.0] Redaktion: http://localhost:$Port/redaktion"
-Write-Host "[.ABSEITS 0.4.0] Beim ersten Aufruf wird das Redaktionskonto eingerichtet."
+Write-Host "[.ABSEITS 0.5.0] Startet unter http://localhost:$Port"
+Write-Host "[.ABSEITS 0.5.0] Redaktion: http://localhost:$Port/redaktion"
+Write-Host "[.ABSEITS 0.5.0] Beim ersten Aufruf wird das Redaktionskonto eingerichtet."
 Write-Host "[.ABSEITS] Beenden mit Strg+C"
 npm run dev -- --port $Port
 if ($LASTEXITCODE -ne 0) {

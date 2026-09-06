@@ -2,13 +2,14 @@ import { listPublishedArticles } from "@/db";
 import { ArticleBrowser } from "@/components/article-browser";
 import { SiteHeader } from "@/components/site-header";
 import { sampleArticles, type PublicArticle } from "@/lib/content";
+import { toPublicArticle } from "@/lib/public-article";
 
 export const dynamic = "force-dynamic";
 
 async function getPublishedArticles(): Promise<PublicArticle[]> {
   try {
     const rows = listPublishedArticles();
-    return rows.map((article) => ({ id: String(article.id), slug: article.slug, title: article.title, kicker: article.kicker, subtitle: article.subtitle, excerpt: article.excerpt, summary: article.summary, content: article.content, category: article.category, tags: parseTags(article.tags), coverImage: article.coverImage, imageAlt: article.imageAlt, publishedAt: article.publishedAt ?? article.createdAt, readingMinutes: Math.max(1, Math.ceil(article.content.replace(/<[^>]+>/g, " ").trim().split(/\s+/).length / 210)) }));
+    return rows.map(toPublicArticle);
   } catch { return []; }
 }
 
@@ -24,4 +25,3 @@ export default async function Home() {
     </main>
   );
 }
-function parseTags(value: string): string[] { try { const tags = JSON.parse(value); return Array.isArray(tags) ? tags.filter((tag): tag is string => typeof tag === "string") : []; } catch { return []; } }
