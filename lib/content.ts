@@ -4,7 +4,10 @@ export type PublicArticle = {
   id: string;
   slug: string;
   title: string;
+  kicker?: string;
+  subtitle?: string;
   excerpt: string;
+  summary?: string;
   content: string;
   category: string;
   tags: string[];

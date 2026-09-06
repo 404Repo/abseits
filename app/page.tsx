@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 async function getPublishedArticles(): Promise<PublicArticle[]> {
   try {
     const rows = listPublishedArticles();
-    return rows.map((article) => ({ id: String(article.id), slug: article.slug, title: article.title, excerpt: article.excerpt, content: article.content, category: article.category, tags: parseTags(article.tags), coverImage: article.coverImage, imageAlt: article.imageAlt, publishedAt: article.publishedAt ?? article.createdAt, readingMinutes: Math.max(1, Math.ceil(article.content.trim().split(/\s+/).length / 210)) }));
+    return rows.map((article) => ({ id: String(article.id), slug: article.slug, title: article.title, kicker: article.kicker, subtitle: article.subtitle, excerpt: article.excerpt, summary: article.summary, content: article.content, category: article.category, tags: parseTags(article.tags), coverImage: article.coverImage, imageAlt: article.imageAlt, publishedAt: article.publishedAt ?? article.createdAt, readingMinutes: Math.max(1, Math.ceil(article.content.replace(/<[^>]+>/g, " ").trim().split(/\s+/).length / 210)) }));
   } catch { return []; }
 }
 

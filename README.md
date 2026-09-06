@@ -77,7 +77,11 @@ werden. Das konfigurierte Datenverzeichnis muss dauerhaft beschreibbar sein.
 
 Der Zugang liegt unter `/redaktion`. Artikel können als Entwurf gespeichert
 oder veröffentlicht und mit Kategorie, Schlagwörtern sowie einem Aufmacherbild
-versehen werden. Unterstützte Bildformate sind JPG, PNG, WebP und GIF bis 12 MB.
+versehen werden. Der visuelle Langform-Editor unterstützt Überschriften,
+Listen, Links, Zitate, Info- und Warnboxen sowie mehrere Grafiken mit
+Bildunterschriften. Bestehende `.docx`-Artikel können direkt importiert werden;
+Überschriften, eingebettete Bilder, Bildunterschriften und Links werden dabei
+übernommen. Unterstützte Bildformate sind JPG, PNG, WebP und GIF bis 12 MB.
 
 ## Git-Workflow
 

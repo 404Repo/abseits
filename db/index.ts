@@ -7,7 +7,10 @@ export type ArticleRow = {
   id: number;
   slug: string;
   title: string;
+  kicker: string;
+  subtitle: string;
   excerpt: string;
+  summary: string;
   content: string;
   category: string;
   tags: string;
@@ -22,7 +25,7 @@ export type ArticleRow = {
 export type EditorRow = { id: number; email: string; passwordHash: string };
 
 const articleColumns = `
-  id, slug, title, excerpt, content, category, tags,
+  id, slug, title, kicker, subtitle, excerpt, summary, content, category, tags,
   cover_image AS "coverImage", image_alt AS "imageAlt", status,
   published_at AS "publishedAt", created_at AS "createdAt", updated_at AS "updatedAt"
 `;
@@ -48,7 +51,10 @@ export function getDb(): DatabaseSync {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       slug TEXT NOT NULL UNIQUE,
       title TEXT NOT NULL,
+      kicker TEXT NOT NULL DEFAULT '',
+      subtitle TEXT NOT NULL DEFAULT '',
       excerpt TEXT NOT NULL,
+      summary TEXT NOT NULL DEFAULT '',
       content TEXT NOT NULL,
       category TEXT NOT NULL,
       tags TEXT NOT NULL DEFAULT '[]',
@@ -78,6 +84,9 @@ export function getDb(): DatabaseSync {
   const articleFields = database.prepare("PRAGMA table_info(articles)").all() as Array<{ name: string }>;
   if (!articleFields.some((field) => field.name === "cover_image")) database.exec("ALTER TABLE articles ADD COLUMN cover_image TEXT");
   if (!articleFields.some((field) => field.name === "image_alt")) database.exec("ALTER TABLE articles ADD COLUMN image_alt TEXT");
+  if (!articleFields.some((field) => field.name === "kicker")) database.exec("ALTER TABLE articles ADD COLUMN kicker TEXT NOT NULL DEFAULT ''");
+  if (!articleFields.some((field) => field.name === "subtitle")) database.exec("ALTER TABLE articles ADD COLUMN subtitle TEXT NOT NULL DEFAULT ''");
+  if (!articleFields.some((field) => field.name === "summary")) database.exec("ALTER TABLE articles ADD COLUMN summary TEXT NOT NULL DEFAULT ''");
 
   globalDatabase.abseitsDatabase = database;
   configureEnvironmentEditor(database);
@@ -110,17 +119,17 @@ type ArticleWrite = Omit<ArticleRow, "id" | "createdAt">;
 
 export function createArticle(input: ArticleWrite): ArticleRow {
   const result = getDb().prepare(`
-    INSERT INTO articles (slug, title, excerpt, content, category, tags, cover_image, image_alt, status, published_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(input.slug, input.title, input.excerpt, input.content, input.category, input.tags, input.coverImage, input.imageAlt, input.status, input.publishedAt, input.updatedAt);
+    INSERT INTO articles (slug, title, kicker, subtitle, excerpt, summary, content, category, tags, cover_image, image_alt, status, published_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(input.slug, input.title, input.kicker, input.subtitle, input.excerpt, input.summary, input.content, input.category, input.tags, input.coverImage, input.imageAlt, input.status, input.publishedAt, input.updatedAt);
   return getDb().prepare(`SELECT ${articleColumns} FROM articles WHERE id = ?`).get(result.lastInsertRowid) as ArticleRow;
 }
 
 export function updateArticle(id: number, input: ArticleWrite): ArticleRow | undefined {
   const result = getDb().prepare(`
-    UPDATE articles SET slug = ?, title = ?, excerpt = ?, content = ?, category = ?, tags = ?, cover_image = ?, image_alt = ?, status = ?, published_at = ?, updated_at = ?
+    UPDATE articles SET slug = ?, title = ?, kicker = ?, subtitle = ?, excerpt = ?, summary = ?, content = ?, category = ?, tags = ?, cover_image = ?, image_alt = ?, status = ?, published_at = ?, updated_at = ?
     WHERE id = ?
-  `).run(input.slug, input.title, input.excerpt, input.content, input.category, input.tags, input.coverImage, input.imageAlt, input.status, input.publishedAt, input.updatedAt, id);
+  `).run(input.slug, input.title, input.kicker, input.subtitle, input.excerpt, input.summary, input.content, input.category, input.tags, input.coverImage, input.imageAlt, input.status, input.publishedAt, input.updatedAt, id);
   if (result.changes === 0) return undefined;
   return getDb().prepare(`SELECT ${articleColumns} FROM articles WHERE id = ?`).get(id) as ArticleRow;
 }
